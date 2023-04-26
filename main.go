@@ -17,6 +17,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	port := os.Getenv("APROXY_TARGET_PORT")
+	if port == "" {
+		fmt.Printf("Please ensure environment variable APROXY_TARGET_PORT is set, exitting.\n")
+		os.Exit(1)
+	}
+
 	origin, err := url.Parse(os.Getenv("APROXY_TARGET_URL"))
 	if err != nil {
 		panic(err)
@@ -35,7 +41,8 @@ func main() {
 
 	http.Handle("/", proxy)
 	log.Println("Server started!")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	addr := fmt.Sprintf(":%s", port)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func httpLog(r *httputil.ProxyRequest, origin *url.URL) {
