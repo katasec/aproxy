@@ -9,9 +9,36 @@ import (
 	"os"
 )
 
-//APROXY_TARGET_URL="https://go.dev"
-
 func main() {
+
+	port, origin := checkEnv()
+
+	// Setup proxy
+	fmt.Println("Target URL: ", origin)
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+
+			// Extract the target URL from the request
+			target := fmt.Sprintf("%s://%s%s", origin.Scheme, origin.Host, r.In.URL.Host)
+			targetUrl, _ := url.Parse(target)
+
+			r.SetURL(targetUrl)
+
+			// Log request
+			httpLog(r, origin)
+		},
+	}
+
+	// Handle all requests with the proxy
+	http.Handle("/", proxy)
+	addr := fmt.Sprintf("0.0.0.0:%s", port)
+
+	// Start the server
+	log.Printf("Server started on %s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+func checkEnv() (string, *url.URL) {
 	if os.Getenv("APROXY_TARGET_URL") == "" {
 		fmt.Printf("Please ensure environment variable APROXY_TARGET_URL is set, exitting.\n")
 		os.Exit(1)
@@ -27,25 +54,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Target URL: ", origin)
-
-	proxy := &httputil.ReverseProxy{
-		Rewrite: func(r *httputil.ProxyRequest) {
-			target := fmt.Sprintf("%s://%s%s", origin.Scheme, origin.Host, r.In.URL.String())
-			targetUrl, _ := url.Parse(target)
-			r.SetURL(targetUrl)
-			httpLog(r, origin)
-		},
-	}
-
-	http.Handle("/", proxy)
-	log.Println("Server started!")
-	addr := fmt.Sprintf(":%s", port)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	return port, origin
 }
 
 func httpLog(r *httputil.ProxyRequest, origin *url.URL) {
 	x := fmt.Sprintf("%s://%s%s", origin.Scheme, origin.Host, r.In.URL.String())
 	log.Printf("Fetching %s\n", x)
+
+	// Log request headers
+	for k, v := range r.Out.Header {
+		fmt.Printf("Header: %s: %s\n", k, v)
+	}
+
 }

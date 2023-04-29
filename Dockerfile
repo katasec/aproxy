@@ -19,5 +19,6 @@ CMD ["/aproxy"]
 
 
 
-#docker build . -t ghcr.io/katasec/aproxy:v0.0.1
-#docker run -e APROXY_TARGET_URL="https://go.dev" -it ghcr.io/katasec/aproxy:v0.0.1
+#docker build . -t ghcr.io/katasec/aproxy:v0.0.2
+#docker run -it ghcr.io/katasec/aproxy:v0.0.2
+#docker run -e APROXY_TARGET_URL="https://go.dev" -e APROXY_TARGET_PORT="1337" -it ghcr.io/katasec/aproxy:v0.0.2
