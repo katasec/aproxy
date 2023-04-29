@@ -1,12 +1,15 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
+
+	"tailscale.com/client/tailscale"
 )
 
 func main() {
@@ -14,15 +17,11 @@ func main() {
 	port, origin := checkEnv()
 
 	// Setup proxy
-	fmt.Println("Target URL: ", origin)
+	log.Println("Target URL: ", origin)
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
-
-			// Extract the target URL from the request
-			target := fmt.Sprintf("%s://%s%s", origin.Scheme, origin.Host, r.In.URL.Host)
-			targetUrl, _ := url.Parse(target)
-
-			r.SetURL(targetUrl)
+			// Set the request host to the target host
+			r.SetURL(origin)
 
 			// Log request
 			httpLog(r, origin)
@@ -34,8 +33,18 @@ func main() {
 	addr := fmt.Sprintf("0.0.0.0:%s", port)
 
 	// Start the server
+
+	localClient := &tailscale.LocalClient{}
+	s := &http.Server{
+		TLSConfig: &tls.Config{
+			GetCertificate: localClient.GetCertificate,
+		},
+		Handler: proxy,
+	}
+
 	log.Printf("Server started on %s\n", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(s.ListenAndServeTLS("", ""))
+	//log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func checkEnv() (string, *url.URL) {
@@ -58,12 +67,13 @@ func checkEnv() (string, *url.URL) {
 }
 
 func httpLog(r *httputil.ProxyRequest, origin *url.URL) {
+
 	x := fmt.Sprintf("%s://%s%s", origin.Scheme, origin.Host, r.In.URL.String())
 	log.Printf("Fetching %s\n", x)
 
 	// Log request headers
-	for k, v := range r.Out.Header {
-		fmt.Printf("Header: %s: %s\n", k, v)
-	}
+	// for k, v := range r.Out.Header {
+	// 	log.Printf("Header: %s: %s\n", k, v)
+	// }
 
 }
