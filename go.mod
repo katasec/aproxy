@@ -2,6 +2,8 @@ module github.com/katasec/aproxy
 
 go 1.20
 
+require tailscale.com v1.40.0
+
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
@@ -27,5 +29,4 @@ require (
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
-	tailscale.com v1.40.0 // indirect
 )
