@@ -13,10 +13,12 @@ RUN go mod download && \
 # ------------------------------------------------------------------------------------------
 # Copy compiled binary on to golang distro
 # ------------------------------------------------------------------------------------------
-FROM bash:5.2.15-alpine3.17
+# FROM bash:5.2.15-alpine3.17
+FROM ghcr.io/katasec/tailscale:0.07
 COPY --from=build /go/bin/aproxy /
-CMD ["/aproxy"]
-
+COPY tailscale.sh /usr/local/bin/tailscale.sh
+# CMD ["/aproxy"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 
 #docker build . -t ghcr.io/katasec/aproxy:v0.0.2
